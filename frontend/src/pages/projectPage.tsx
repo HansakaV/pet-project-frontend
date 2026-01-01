@@ -15,18 +15,24 @@ export default function ProjectsPage() {
     deleteProject,
   } = useProjects();
 
+  
+
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     projectId: "",
     name: "",
     description: "",
   });
+  
 
   const handleCreate = async () => {
     await createProject(formData);
     setFormData({ projectId: "", name: "", description: "" });
     setIsModalOpen(false);
   };
+
+  
 
   return (
     <div className="min-h-screen bg-slate-100 p-6">

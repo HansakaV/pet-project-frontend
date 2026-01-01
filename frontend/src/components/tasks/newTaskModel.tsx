@@ -1,149 +1,129 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { X } from 'lucide-react';
-
-interface Task {
-  _id: string;
-  projectId: string;
-  title: string;
-  description: string;
-  status: "To Do" | "In Progress" | "Done";
-}
+import type Task from '../../types/task';
 
 interface TaskFormModalProps {
+  projectId: string;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (task: Omit<Task, '_id'>) => void;
-  projectId: string;
-  initialData?: Task;
-  mode?: 'create' | 'edit';
+  onCreateTask: () => void;
+  TaskFromData: {
+    title: string;
+    description: string;
+    status: Task['status'];
+    projectId: string;
+  };
+  setTaskFormData: (data: any) => void;
 }
 
-export default function TaskFormModal({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
+export default function TaskFormModal({
   projectId,
-  initialData,
-  mode = 'create'
+  isOpen,
+  onClose,
+  onCreateTask,
+  TaskFromData,
+  setTaskFormData,
 }: TaskFormModalProps) {
-  const [formData, setFormData] = useState({
-    title: initialData?.title || '',
-    description: initialData?.description || '',
-    status: initialData?.status || 'To Do' as Task['status'],
-    projectId: initialData?.projectId || projectId
-  });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-    
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (validate()) {
-      onSubmit(formData);
-      handleClose();
-    }
-  };
-
-  const handleClose = () => {
-    setFormData({
-      title: '',
-      description: '',
-      status: 'To Do',
-      projectId
+  useEffect(() => {
+    setTaskFormData({
+      ...TaskFromData,
+      projectId,
     });
-    setErrors({});
-    onClose();
-  };
+  }, [projectId]);
+
+  
+  const [errors, setErrors] = useState<{
+    title?: string;
+    description?: string;
+  }>({});
 
   if (!isOpen) return null;
 
+  
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setTaskFormData({ ...TaskFromData, [name]: value });
+  };
+
+  const handleSubmit = () => {
+    const newErrors: typeof errors = {};
+
+    if (!TaskFromData.title.trim()) {
+      newErrors.title = 'Title is required';
+    }
+
+    if (!TaskFromData.description.trim()) {
+      newErrors.description = 'Description is required';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+    onCreateTask();
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+        
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {mode === 'create' ? 'Create New Task' : 'Edit Task'}
-          </h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+          <h2 className="text-xl font-semibold">Create Task</h2>
+          <button onClick={onClose}>
             <X size={20} />
           </button>
         </div>
 
         <div className="p-6 space-y-4">
+          {/* Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-              Title <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-sm font-medium mb-1">Title *</label>
             <input
-              type="text"
-              id="title"
               name="title"
-              value={formData.title}
+              value={TaskFromData.title}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-lg ${
                 errors.title ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Enter task title"
             />
             {errors.title && (
-              <p className="mt-1 text-sm text-red-500">{errors.title}</p>
+              <p className="text-sm text-red-500">{errors.title}</p>
             )}
           </div>
 
+          {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-              Description <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium mb-1">
+              Description *
             </label>
             <textarea
-              id="description"
               name="description"
-              value={formData.description}
-              onChange={handleChange}
               rows={4}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${
+              value={TaskFromData.description}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 border rounded-lg ${
                 errors.description ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Enter task description"
             />
             {errors.description && (
-              <p className="mt-1 text-sm text-red-500">{errors.description}</p>
+              <p className="text-sm text-red-500">{errors.description}</p>
             )}
           </div>
 
+          {/* Status */}
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
+            <label className="block text-sm font-medium mb-1">Status</label>
             <select
-              id="status"
               name="status"
-              value={formData.status}
+              value={TaskFromData.status}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-lg"
             >
               <option value="To Do">To Do</option>
               <option value="In Progress">In Progress</option>
@@ -151,20 +131,19 @@ export default function TaskFormModal({
             </select>
           </div>
 
+          {/* Buttons */}
           <div className="flex gap-3 pt-4">
             <button
-              type="button"
-              onClick={handleClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={onClose}
+              className="flex-1 border rounded-lg py-2"
             >
               Cancel
             </button>
             <button
-              type="button"
               onClick={handleSubmit}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex-1 bg-blue-600 text-white rounded-lg py-2"
             >
-              {mode === 'create' ? 'Create Task' : 'Update Task'}
+              Create Task
             </button>
           </div>
         </div>
