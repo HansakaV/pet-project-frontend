@@ -212,7 +212,7 @@ function TaskColumn({
                   </select>
 
                   <button
-                    onClick={() => onDeleteTask(task._id)}
+                    onClick={() => task._id && onDeleteTask(task._id)}
                     className="text-red-500 hover:bg-red-50 p-1 rounded"
                   >
                     <Trash2 size={14} />
