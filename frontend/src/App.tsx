@@ -1,15 +1,12 @@
 import './App.css'
+import AppRouter from './router'
+import './styles/animations.css'
 
 function App() {
-
-  return (
-    <>
-    <div>
-      <h1>Pet Project </h1>
-      <h3>Test Setup</h3>
-    </div>
-    </>
+ return (
+    <AppRouter />
   )
 }
 
 export default App
+
